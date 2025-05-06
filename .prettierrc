@@ -9,5 +9,6 @@
   "printWidth": 120,
   "bracketSpacing": true,
   "jsxSingleQuote": false,
-  "htmlWhitespaceSensitivity": "ignore"
+  "htmlWhitespaceSensitivity": "ignore",
+  "plugins": ["prettier-plugin-tailwindcss"]
 }

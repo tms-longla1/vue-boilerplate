@@ -4,22 +4,22 @@
   </div>
 
   <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+    <div class="bg-white px-4 py-8 shadow-sm sm:rounded-lg sm:px-10">
       <form class="space-y-6" novalidate @submit="submitForm">
         <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+          <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
           <div class="mt-1">
             <input
-              id="email"
-              name="email"
-              type="email"
-              autocomplete="email"
+              id="username"
+              name="username"
+              type="text"
+              autocomplete="username"
               required
-              v-model="email"
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              v-model="username"
+              class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-xs focus:border-indigo-500 focus:ring-indigo-500 focus:outline-hidden sm:text-sm"
             />
-            <div v-if="errors.email" class="mt-1 text-sm text-red-600">
-              {{ errors.email }}
+            <div v-if="errors.username" class="mt-1 text-sm text-red-600">
+              {{ errors.username }}
             </div>
           </div>
         </div>
@@ -34,7 +34,7 @@
               autocomplete="current-password"
               required
               v-model="password"
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-xs focus:border-indigo-500 focus:ring-indigo-500 focus:outline-hidden sm:text-sm"
             />
             <div v-if="errors.password" class="mt-1 text-sm text-red-600">
               {{ errors.password }}
@@ -48,7 +48,7 @@
               id="remember-me"
               name="remember-me"
               type="checkbox"
-              class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              class="h-4 w-4 rounded-sm border-gray-300 text-indigo-600 focus:ring-indigo-500"
             />
             <label for="remember-me" class="ml-2 block text-sm text-gray-900">Remember me</label>
           </div>
@@ -61,7 +61,7 @@
         <div>
           <button
             type="submit"
-            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            class="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-xs hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden"
           >
             Sign in
           </button>
@@ -73,36 +73,41 @@
 
 <script setup lang="ts">
 import { login } from '@/apis/auth.api'
+import { loginSchema, type TLoginSchema } from '@/schemas/auth.schema'
 import type { TLoginPayload } from '@/types/auth.type'
+import { setAccessTokenToLocalStorage } from '@/utils/localStorage'
 import { useMutation } from '@tanstack/vue-query'
+import type { AxiosError } from 'axios'
 import { useForm } from 'vee-validate'
 import { useRouter } from 'vue-router'
-import * as yup from 'yup'
 
 const router = useRouter()
 
-const loginSchema = yup.object({
-  email: yup.string().email('Invalid email address').required('Email is required'),
-  password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required')
-})
-
-type TLoginSchema = yup.InferType<typeof loginSchema>
-
-const { defineField, errors, handleSubmit } = useForm<TLoginSchema>({
-  validationSchema: loginSchema
+const { defineField, errors, handleSubmit, setFieldError } = useForm<TLoginSchema>({
+  validationSchema: loginSchema,
+  initialValues: {
+    username: 'emilys',
+    password: 'emilyspass'
+  }
 })
 
 const loginMutation = useMutation({
   mutationFn: (values: TLoginPayload) => login(values)
 })
 
-const [email] = defineField('email')
+const [username] = defineField('username')
 const [password] = defineField('password')
 
 const submitForm = handleSubmit((values) => {
   loginMutation.mutate(values, {
-    onSuccess: () => {
+    onSuccess: (response) => {
+      const { accessToken } = response.data
+      setAccessTokenToLocalStorage(accessToken)
       router.push({ name: 'top' })
+    },
+    onError: (error) => {
+      const errorMessage = (error as AxiosError<{ message: string }>).response?.data.message
+      setFieldError('password', errorMessage)
     }
   })
 })

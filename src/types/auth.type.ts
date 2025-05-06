@@ -1,9 +1,10 @@
-export type TLoginPayload = {
-  email: string
-  password: string
-}
+export type TLoginPayload = { username: string; password: string }
 
-export type TLoginResponse = {
-  accessToken: string
-  refreshToken: string
+export type TLoginResponse = { accessToken: string }
+
+export type TUser = {
+  username: string
+  email: string
+  firstName: string
+  lastName: string
 }

@@ -2,8 +2,7 @@ import axios, { AxiosError } from 'axios'
 import { getAccessTokenFromLocalStorage } from './localStorage'
 
 const http = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}`,
-  timeout: 1000 * 60,
+  baseURL: import.meta.env.VITE_API_URL,
   headers: { 'Content-Type': 'application/json' }
 })
 
